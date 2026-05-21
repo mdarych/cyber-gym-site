@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CYBER GYM — AI Fitness Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --accent: #00FFCC;
+      --accent-dim: rgba(0,255,204,0.12);
+      --accent-border: rgba(0,255,204,0.25);
+      --bg: #000000;
+      --surface: #0A0A0A;
+      --surface2: #111114;
+      --surface3: #16181C;
+      --text: #FFFFFF;
+      --dimmed: #71767B;
+      --divider: #2F3336;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent) var(--surface);
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--divider); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.4;
+      z-index: 10000;
+      animation: scanline 6s linear infinite;
+    }
+
+    @keyframes scanline {
+      0% { top: -2px; }
+      100% { top: 100vh; }
+    }
+
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,204,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,204,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glow-orb {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,255,204,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      transform: translate(-50%, -50%);
+      transition: left 0.8s cubic-bezier(0.16, 1, 0.3, 1), top 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(0,0,0,0.6);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: all 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(0,0,0,0.85);
+      border-bottom-color: var(--divider);
+    }
+    .nav-inner {
+      max-width: 1100px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .nav-logo .dot {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent); }
+      50% { opacity: 0.5; box-shadow: 0 0 16px var(--accent); }
+    }
+    .nav-logo span {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+    }
+    .nav-links a {
+      color: var(--dimmed);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .lang-toggle {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--divider);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .lang-btn {
+      padding: 4px 10px;
+      background: transparent;
+      border: none;
+      color: var(--dimmed);
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .lang-btn.active { background: var(--accent); color: #000; }
+    .lang-btn:hover:not(.active) { color: var(--text); }
+    .nav-cta {
+      padding: 7px 18px;
+      background: var(--accent);
+      color: #000;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+    .nav-cta:hover {
+      box-shadow: 0 0 20px rgba(0,255,204,0.3);
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 1px;
+      margin-bottom: 32px;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.2s forwards;
+    }
+    .hero-badge .badge-dot {
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+    .hero h1 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(42px, 8vw, 80px);
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1;
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.3s forwards;
+    }
+    .hero h1 .accent { color: var(--accent); text-shadow: 0 0 40px rgba(0,255,204,0.3); }
+    .hero-sub {
+      font-size: clamp(16px, 2.5vw, 20px);
+      color: var(--dimmed);
+      max-width: 560px;
+      line-height: 1.6;
+      font-weight: 400;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.45s forwards;
+    }
+    .hero-sub strong { color: var(--text); font-weight: 600; }
+    .hero-actions {
+      display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+      opacity: 0; animation: fadeUp 0.6s 0.6s forwards;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 32px; background: var(--accent); color: #000;
+      border-radius: 28px; font-size: 14px; font-weight: 800;
+      letter-spacing: 0.5px; text-decoration: none; border: none;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(0,255,204,0.35); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px; background: transparent; color: var(--text);
+      border-radius: 28px; font-size: 14px; font-weight: 700;
+      letter-spacing: 0.5px; text-decoration: none;
+      border: 1px solid var(--divider); cursor: pointer; transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--accent-border); color: var(--accent); background: var(--accent-dim); }
+    .stats-strip {
+      display: flex; justify-content: center; gap: 40px; margin-top: 64px;
+      opacity: 0; animation: fadeUp 0.6s 0.75s forwards;
+    }
+    .stat-item { text-align: center; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 800; color: var(--accent); }
+    .stat-label { font-size: 11px; color: var(--dimmed); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    section { padding: 100px 0; position: relative; }
+    .section-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 10px; font-weight: 700; letter-spacing: 2px;
+      color: var(--accent); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .section-label::before { content: ''; width: 20px; height: 1px; background: var(--accent); }
+    .section-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(28px, 5vw, 40px); font-weight: 900;
+      letter-spacing: -1px; line-height: 1.15; margin-bottom: 16px;
+    }
+    .section-desc { font-size: 16px; color: var(--dimmed); max-width: 520px; line-height: 1.6; }
+
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
+    .feature-card {
+      padding: 28px; background: var(--surface); border: 1px solid var(--divider);
+      border-radius: 20px; transition: all 0.3s; opacity: 0; transform: translateY(16px);
+      position: relative; overflow: hidden;
+    }
+    .feature-card.visible { opacity: 1; transform: translateY(0); }
+    .feature-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(0,255,204,0.06) 0%, transparent 60%);
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card:hover { border-color: var(--accent-border); transform: translateY(-2px); }
+    .feature-icon {
+      width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+      background: var(--accent-dim); border: 1px solid var(--accent-border);
+      border-radius: 12px; margin-bottom: 18px; color: var(--accent); font-size: 18px;
+    }
+    .feature-card h3 { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 8px; }
+    .feature-card p { font-size: 13px; color: var(--dimmed); line-height: 1.55; }
+    .feature-tag {
+      display: inline-block; margin-top: 12px; padding: 3px 10px;
+      background: var(--accent-dim); border-radius: 6px;
+      font-size: 10px; font-weight: 700; color: var(--accent); letter-spacing: 0.5px;
+    }
+
+    .ai-section { background: linear-gradient(180deg, var(--bg) 0%, rgba(0,255,204,0.02) 50%, var(--bg) 100%); }
+    .ai-demo {
+      margin-top: 48px; background: var(--surface3); border: 1px solid var(--divider);
+      border-radius: 24px; overflow: hidden; max-width: 600px; margin-left: auto; margin-right: auto;
+    }
+    .ai-demo-header { padding: 14px 20px; border-bottom: 1px solid var(--divider); display: flex; align-items: center; gap: 10px; }
+    .ai-demo-header .dot-green { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 6px var(--accent); }
+    .ai-demo-header span { font-size: 12px; font-weight: 700; letter-spacing: 1px; }
+    .ai-demo-body { padding: 20px; min-height: 200px; }
+    .ai-msg { margin-bottom: 14px; max-width: 85%; animation: msgIn 0.4s ease-out; }
+    @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .ai-msg.user { margin-left: auto; }
+    .ai-msg .bubble { padding: 12px 16px; border-radius: 16px; font-size: 13px; line-height: 1.5; }
+    .ai-msg.user .bubble { background: var(--accent); color: #000; font-weight: 600; border-bottom-right-radius: 4px; }
+    .ai-msg.ai .bubble { background: var(--surface); border: 1px solid var(--divider); border-bottom-left-radius: 4px; }
+    .ai-msg.ai .bubble .typing-dots { display: inline-flex; gap: 4px; align-items: center; }
+    .ai-msg.ai .bubble .typing-dots span { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: dotBounce 1.2s infinite; }
+    .ai-msg.ai .bubble .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .ai-msg.ai .bubble .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotBounce { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-4px); } }
+    .ai-demo-input { padding: 12px 20px 16px; border-top: 1px solid var(--divider); display: flex; align-items: center; gap: 10px; }
+    .ai-demo-input input {
+      flex: 1; background: var(--bg); border: 1px solid var(--divider);
+      border-radius: 20px; padding: 10px 16px; color: var(--text);
+      font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s;
+    }
+    .ai-demo-input input:focus { border-color: var(--accent-border); }
+    .ai-demo-input input::placeholder { color: var(--dimmed); opacity: 0.5; }
+    .ai-send-btn {
+      width: 36px; height: 36px; background: var(--accent); border: none;
+      border-radius: 50%; color: #000; font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .ai-send-btn:hover { box-shadow: 0 0 12px rgba(0,255,204,0.4); }
+
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; position: relative; }
+    .steps::before { content: ''; position: absolute; top: 36px; left: calc(16.67% + 12px); right: calc(16.67% + 12px); height: 1px; background: linear-gradient(90deg, transparent, var(--divider), transparent); }
+    .step { text-align: center; opacity: 0; transform: translateY(16px); }
+    .step.visible { opacity: 1; transform: translateY(0); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+    .step-num {
+      width: 72px; height: 72px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+      background: var(--surface); border: 1px solid var(--divider); border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 900;
+      color: var(--accent); position: relative; z-index: 1;
+    }
+    .step h3 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+    .step p { font-size: 13px; color: var(--dimmed); line-height: 1.5; max-width: 280px; margin: 0 auto; }
+
+    .tech-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; justify-content: center; }
+    .tech-chip {
+      padding: 8px 16px; background: var(--surface); border: 1px solid var(--divider);
+      border-radius: 12px; font-size: 12px; font-weight: 600; color: var(--dimmed);
+      display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+    }
+    .tech-chip:hover { border-color: var(--accent-border); color: var(--accent); }
+    .tech-chip i { font-size: 14px; color: var(--accent); }
+
+    .cta-section { text-align: center; position: relative; }
+    .cta-section::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px; height: 500px; background: radial-gradient(circle, rgba(0,255,204,0.05) 0%, transparent 60%); pointer-events: none; }
+    .cta-glow { font-family: 'JetBrains Mono', monospace; font-size: clamp(36px, 7vw, 64px); font-weight: 900; letter-spacing: -2px; margin-bottom: 20px; }
+    .cta-glow .accent { color: var(--accent); text-shadow: 0 0 60px rgba(0,255,204,0.4); }
+
+    footer { padding: 40px 0; border-top: 1px solid var(--divider); text-align: center; }
+    footer p { font-size: 12px; color: var(--dimmed); line-height: 1.6; }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+
+    .reveal { opacity: 0; transform: translateY(24px); transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 768px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; gap: 32px; }
+      .steps::before { display: none; }
+      .stats-strip { gap: 24px; flex-wrap: wrap; }
+      .nav-links { display: none; }
+      .hero { padding: 100px 20px 60px; }
+    }
+    @media (max-width: 480px) {
+      .hero-actions { flex-direction: column; align-items: center; }
+      .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+    }
+    @media (hover: hover) { .feature-card { cursor: default; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+  </style>
+</head>
+<body>
+
+  <div class="grid-bg"></div>
+  <div class="glow-orb" id="glowOrb"></div>
+
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo"><div class="dot"></div><span>CYBER GYM</span></a>
+      <div class="nav-links">
+        <a href="#features" id="nl1">Функції</a>
+        <a href="#ai" id="nl2">AI</a>
+        <a href="#how" id="nl3">Як працює</a>
+        <a href="#tech" id="nl4">Технології</a>
+      </div>
+      <div class="nav-right">
+        <div class="lang-toggle">
+          <button class="lang-btn active" data-lang="uk">UA</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
+        <a href="https://github.com" target="_blank" class="nav-cta"><i class="fab fa-github" style="margin-right:4px"></i> GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero" id="hero">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      <span id="hb">POWERED BY GROK AI</span>
+    </div>
+    <h1><span class="accent">CYBER</span> GYM</h1>
+    <p class="hero-sub" id="hs">Фітнес-трекер нового покоління з <strong>AI-асистентом</strong>, що знає твоє тіло. Аналізує прогрес, виявляє плато, будує програму — персонально для тебе.</p>
+    <div class="hero-actions">
+      <a href="#features" class="btn-primary" id="hb1"><i class="fas fa-bolt"></i> Дізнатись більше</a>
+      <a href="#how" class="btn-secondary" id="hb2"><i class="fas fa-play"></i> Як це працює</a>
+    </div>
+    <div class="stats-strip">
+      <div class="stat-item"><div class="stat-value" data-count="100">100+</div><div class="stat-label" id="sl1">Вправ</div></div>
+      <div class="stat-item"><div class="stat-value">9</div><div class="stat-label" id="sl2">Груп м'язів</div></div>
+      <div class="stat-item"><div class="stat-value">∞</div><div class="stat-label" id="sl3">AI порад</div></div>
+      <div class="stat-item"><div class="stat-value">2</div><div class="stat-label" id="sl4">Мови</div></div>
+    </div>
+  </header>
+
+  <section id="features">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label" id="fl">Можливості</div>
+        <h2 class="section-title" id="ft">Все для твоєї трансформації</h2>
+        <p class="section-desc" id="fd">Не просто щоденник тренувань — інтелектуальна система, що адаптується під тебе.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card" data-delay="0">
+          <div class="feature-icon"><i class="fas fa-brain"></i></div>
+          <h3 id="c1t">AI Асистент</h3>
+          <p id="c1d">Персональний AI-тренер на базі Grok. Аналізує твої дані, виявляє плато, пропонує заміни вправ через травми.</p>
+          <span class="feature-tag">GROK 3</span>
+        </div>
+        <div class="feature-card" data-delay="80">
+          <div class="feature-icon"><i class="fas fa-calendar-week"></i></div>
+          <h3 id="c2t">Тижнева програма</h3>
+          <p id="c2d">Обери дні, м&#39;язові групи, вправи — отримай готову програму на тиждень. Зберігай як шаблони.</p>
+          <span class="feature-tag" id="c2g">ПЛАНУВАННЯ</span>
+        </div>
+        <div class="feature-card" data-delay="160">
+          <div class="feature-icon"><i class="fas fa-person-running"></i></div>
+          <h3 id="c3t">М&#39;язова карта</h3>
+          <p id="c3d">Інтерактивна 3D-модель тіла. Торкнись м&#39;яза — отримай вправи. Front &amp; Back види.</p>
+          <span class="feature-tag" id="c3g">ІНТЕРАКТИВ</span>
+        </div>
+        <div class="feature-card" data-delay="240">
+          <div class="feature-icon"><i class="fas fa-trophy"></i></div>
+          <h3 id="c4t">Гейміфікація</h3>
+          <p id="c4d">XP, рівні від Новобранця до Кіборга, бейджі, стріки. Тренування стає грою.</p>
+          <span class="feature-tag" id="c4g">МОТИВАЦІЯ</span>
+        </div>
+        <div class="feature-card" data-delay="320">
+          <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+          <h3 id="c5t">Аналітика прогресу</h3>
+          <p id="c5d">Графіки ваги, об&#39;єму, 1RM калькулятор, heatmap активності, виявлення PR.</p>
+          <span class="feature-tag" id="c5g">СТАТИСТИКА</span>
+        </div>
+        <div class="feature-card" data-delay="400">
+          <div class="feature-icon"><i class="fas fa-ruler"></i></div>
+          <h3 id="c6t">Обміри тіла</h3>
+          <p id="c6d">Інтерактивний скелет для замірів: груди, талія, біцепс, стегна — 9 зон з історією.</p>
+          <span class="feature-tag" id="c6g">ТРЕКІНГ</span>
+        </div>
+        <div class="feature-card" data-delay="480">
+          <div class="feature-icon"><i class="fas fa-dumbbell"></i></div>
+          <h3 id="c7t">База вправ + Custom</h3>
+          <p id="c7d">100+ вбудованих вправ + створюй свої. Фільтр по м&#39;язах, обладнанні, типі.</p>
+          <span class="feature-tag" id="c7g">БАЗА</span>
+        </div>
+        <div class="feature-card" data-delay="560">
+          <div class="feature-icon"><i class="fas fa-users"></i></div>
+          <h3 id="c8t">Режим Тренера</h3>
+          <p id="c8d">Керуй клієнтами: розклад, програми, історія, AI-аналіз. Шаблони тренувань.</p>
+          <span class="feature-tag" id="c8g">ПРО</span>
+        </div>
+        <div class="feature-card" data-delay="640">
+          <div class="feature-icon"><i class="fas fa-cloud-arrow-up"></i></div>
+          <h3 id="c9t">Backup &amp; Sync</h3>
+          <p id="c9d">JSON експорт/імпорт всіх даних. Нотатки, настрій, обміри — все збережено.</p>
+          <span class="feature-tag" id="c9g">БЕЗПЕКА</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="ai" class="ai-section">
+    <div class="container">
+      <div class="reveal" style="text-align:center;">
+        <div class="section-label" style="justify-content:center;" id="al">AI Асистент</div>
+        <h2 class="section-title" style="max-width:600px;margin:0 auto 16px;" id="at">AI Асистент, що знає тебе</h2>
+        <p class="section-desc" style="margin:0 auto;" id="ad">Не загальний бот — AI, що бачить твої тренування, вагу, стрік, плато та травми. Його поради — про тебе.</p>
+      </div>
+      <div class="ai-demo reveal" id="aiDemo">
+        <div class="ai-demo-header">
+          <div class="dot-green"></div>
+          <span id="ah">AI АСИСТЕНТ</span>
+        </div>
+        <div class="ai-demo-body" id="chatBody"></div>
+        <div class="ai-demo-input">
+          <input type="text" id="chatInput" placeholder="Спитай щось про тренування..." autocomplete="off">
+          <button class="ai-send-btn" id="chatSend" aria-label="Надіслати"><i class="fas fa-arrow-up"></i></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="container">
+      <div class="reveal" style="text-align:center;">
+        <div class="section-label" style="justify-content:center;" id="hl">Як працює</div>
+        <h2 class="section-title" id="ht">3 кроки до результату</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <h3 id="s1t">Заповни профіль</h3>
+          <p id="s1d">Вік, вага, ціль, рівень, травми — AI одразу почне працювати персонально.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <h3 id="s2t">Тренуйся</h3>
+          <p id="s2d">Обери программу або м&#39;язи — додаток веде через кожен підхід з таймером відпочинку.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <h3 id="s3t">Отримуй інсайти</h3>
+          <p id="s3d">AI аналізує прогрес, виявляє плато, пропонує зміни. Тижневий звіт автоматично.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tech">
+    <div class="container">
+      <div class="reveal" style="text-align:center;">
+        <div class="section-label" style="justify-content:center;" id="tl">Стек</div>
+        <h2 class="section-title" id="tt">Побудовано на найкращому</h2>
+        <div class="tech-grid">
+          <div class="tech-chip"><i class="fas fa-mobile-alt"></i> <span id="tc1">Flutter</span></div>
+          <div class="tech-chip"><i class="fas fa-code"></i> <span id="tc2">Dart</span></div>
+          <div class="tech-chip"><i class="fas fa-brain"></i> <span id="tc3">Grok 3 (xAI)</span></div>
+          <div class="tech-chip"><i class="fas fa-database"></i> <span id="tc4">Hive (локальна БД)</span></div>
+          <div class="tech-chip"><i class="fas fa-bell"></i> <span id="tc5">Push-сповіщення</span></div>
+          <div class="tech-chip"><i class="fas fa-language"></i> <span id="tc6">i18n (UA + EN)</span></div>
+          <div class="tech-chip"><i class="fas fa-palette"></i> <span id="tc7">3 теми</span></div>
+          <div class="tech-chip"><i class="fas fa-shield-alt"></i> <span id="tc8">100% офлайн</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <div class="container">
+      <div class="reveal">
+        <div class="cta-glow" id="ctn"><span class="accent">ПОЧНИ</span> СЬОГОДНІ</div>
+        <p class="section-desc" style="margin:0 auto 32px;text-align:center;max-width:480px;" id="ctd">Безкоштовно. Без реєстрації. Без хмарі — всі дані на твоєму пристрої.</p>
+        <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+          <a href="https://github.com" target="_blank" class="btn-primary" id="ctb1"><i class="fab fa-github"></i> Відкрити на GitHub</a>
+          <a href="#features" class="btn-secondary" id="ctb2"><i class="fas fa-arrow-down"></i> Деталі</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="https://github.com" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+        <a href="mailto:mdarych@gmail.com"><i class="fas fa-envelope"></i> <span id="fcon">Контакт</span></a>
+        <a href="privacy_policy.html"><i class="fas fa-shield-alt"></i> <span id="fprv">Privacy Policy</span></a>
+      </div>
+      <p id="fcopy">CYBER GYM v1.0 · Розроблено з <span style="color:var(--accent)">♥</span> в Україні 🇺🇦</p>
+      <p id="frights">© 2026 Maksym Darych · Всі права захищено · Powered by <a href="https://x.ai" target="_blank">Grok</a></p>
+    </div>
+  </footer>
+
+  <script>
+    /* ═══ SCROLL REVEAL — запускається ПЕРШИМ, щоб секції завжди з'являлись ═══ */
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          var el = entry.target;
+          var delay = el.dataset.delay || 0;
+          setTimeout(function() { el.classList.add('visible'); }, parseInt(delay));
+          if (el.classList.contains('feature-card')) {
+            el.style.transition = 'all 0.5s cubic-bezier(0.16,1,0.3,1) ' + delay + 'ms';
+          }
+          if (el.classList.contains('step')) {
+            el.style.transitionDelay = (Array.from(el.parentNode.children).indexOf(el) * 150) + 'ms';
+          }
+          observer.unobserve(el);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal, .feature-card, .step').forEach(function(el) {
+      observer.observe(el);
+    });
+
+    /* ═══ NAVBAR SCROLL ═══ */
+    var navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', function() {
+      navbar.classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    /* ═══ SMOOTH SCROLL ═══ */
+    document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var tgt = document.querySelector(a.getAttribute('href'));
+        if (tgt) tgt.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    /* ═══ MOUSE GLOW ORB ═══ */
+    var orb = document.getElementById('glowOrb');
+    var orbX = window.innerWidth / 2, orbY = window.innerHeight / 2;
+    var tarX = orbX, tarY = orbY;
+    document.addEventListener('mousemove', function(e) { tarX = e.clientX; tarY = e.clientY; });
+    (function animOrb() {
+      orbX += (tarX - orbX) * 0.08;
+      orbY += (tarY - orbY) * 0.08;
+      orb.style.left = orbX + 'px';
+      orb.style.top = orbY + 'px';
+      requestAnimationFrame(animOrb);
+    })();
+
+    /* ═══ FEATURE CARD MOUSE GLOW ═══ */
+    document.querySelectorAll('.feature-card').forEach(function(card) {
+      card.addEventListener('mousemove', function(e) {
+        var r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
+        card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
+      });
+    });
+
+    /* ═══ COUNTER ANIMATION ═══ */
+    var heroObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          document.querySelectorAll('[data-count]').forEach(function(el) {
+            var target = parseInt(el.dataset.count);
+            var suffix = el.dataset.count.indexOf('+') !== -1 ? '+' : '';
+            var current = 0;
+            var step = Math.ceil(target / 40);
+            var iv = setInterval(function() {
+              current += step;
+              if (current >= target) { current = target; clearInterval(iv); }
+              el.textContent = current + suffix;
+            }, 30);
+          });
+          heroObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    heroObserver.observe(document.getElementById('hero'));
+
+    /* ═══ AI CHAT DEMO ═══ */
+    var chatBody = document.getElementById('chatBody');
+    var chatInput = document.getElementById('chatInput');
+    var chatSend = document.getElementById('chatSend');
+    var curQ = 0;
+
+    function addMsg(role, text) {
+      var m = document.createElement('div');
+      m.className = 'ai-msg ' + (role === 'user' ? 'user' : 'ai');
+      m.innerHTML = '<div class="bubble">' + text + '</div>';
+      chatBody.appendChild(m);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+    function showTyping() {
+      var m = document.createElement('div');
+      m.className = 'ai-msg ai'; m.id = 'typing-msg';
+      m.innerHTML = '<div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+      chatBody.appendChild(m); chatBody.scrollTop = chatBody.scrollHeight;
+    }
+    function removeTyping() { var t = document.getElementById('typing-msg'); if (t) t.remove(); }
+
+    /* ═══ TRANSLATION DATA ═══ */
+    var L = {
+      uk: {
+        nl1:'Функції', nl2:'AI', nl3:'Як працює', nl4:'Технології',
+        hb:'POWERED BY GROK AI',
+        hs:'Фітнес-трекер нового покоління з <strong>AI-асистентом</strong>, що знає твоє тіло. Аналізує прогрес, виявляє плато, будує програму — персонально для тебе.',
+        hb1:'<i class="fas fa-bolt"></i> Дізнатись більше',
+        hb2:'<i class="fas fa-play"></i> Як це працює',
+        sl1:'Вправ', sl2:"Груп м'язів", sl3:'AI порад', sl4:'Мови',
+        fl:'Можливості', ft:'Все для твоєї трансформації',
+        fd:"Не просто щоденник тренувань — інтелектуальна система, що адаптується під тебе.",
+        c1t:'AI Асистент',
+        c1d:"Персональний AI-тренер на базі Grok. Аналізує твої дані, виявляє плато, пропонує заміни вправ через травми.",
+        c2t:'Тижнева програма',
+        c2d:"Обери дні, м'язові групи, вправи — отримай готову програму на тиждень. Зберігай як шаблони.",
+        c2g:'ПЛАНУВАННЯ',
+        c3t:"М'язова карта",
+        c3d:"Інтерактивна 3D-модель тіла. Торкнись м'яза — отримай вправи. Front & Back види.",
+        c3g:'ІНТЕРАКТИВ',
+        c4t:'Гейміфікація',
+        c4d:"XP, рівні від Новобранця до Кіборга, бейджі, стріки. Тренування стає грою.",
+        c4g:'МОТИВАЦІЯ',
+        c5t:'Аналітика прогресу',
+        c5d:"Графіки ваги, об'єму, 1RM калькулятор, heatmap активності, виявлення PR.",
+        c5g:'СТАТИСТИКА',
+        c6t:'Обміри тіла',
+        c6d:"Інтерактивний скелет для замірів: груди, талія, біцепс, стегна — 9 зон з історією.",
+        c6g:'ТРЕКІНГ',
+        c7t:'База вправ + Custom',
+        c7d:"100+ вбудованих вправ + створюй свої. Фільтр по м'язах, обладнанні, типі.",
+        c7g:'БАЗА',
+        c8t:'Режим Тренера',
+        c8d:'Керуй клієнтами: розклад, програми, історія, AI-аналіз. Шаблони тренувань.',
+        c8g:'ПРО',
+        c9t:'Backup & Sync',
+        c9d:'JSON експорт/імпорт всіх даних. Нотатки, настрій, обміри — все збережено.',
+        c9g:'БЕЗПЕКА',
+        al:'AI Асистент', at:'AI Асистент, що знає тебе',
+        ad:"Не загальний бот — AI, що бачить твої тренування, вагу, стрік, плато та травми. Його поради — про тебе.",
+        ah:'AI АСИСТЕНТ', aiph:'Спитай щось про тренування...',
+        aihi:"Привіт! Я твій AI-асистент. Бачу, в тебе сьогодні Груди + Трицепс. Минулого разу жим лежачи — 80кг × 8. Спробуємо 82.5кг?",
+        aq1:"в мене болить праве плече при жимі", aq2:'яка заміна жиму лежачи?',
+        aq3:'скільки відпочивати між підходами?', aq4:'як пробити плато в присіді?',
+        ar1:"При болі в плечі — заміни жим лежачи на жим гантелей під кутом 30°. Це знімає навантаження з передньої дельти. І додай ротаторну манжету: зовнішня ротация з гумкою, 3×15 перед жимом.",
+        ar2:"Найкращі заміни: жим гантелей під кутом (верх грудей), віджимання на брусах (нижня частина + трицепс), або жим у тренажері Хаммер. Обирай за самопочуттям.",
+        ar3:"Для базових вправ (присід, жим) — 2-3 хвилини. Для ізоляції (біцепс, махи) — 60-90 секунд. Між великими м'язовими групами — до 3 хв. Ти зараз на 3-му тижні стріку — не скорочуй відпочинок!",
+        ar4:"Присід — 85кг вже 3 тренування підряд? Це плато. Спробуй: 1) делоад до 75кг і рупися назад з кроком 2.5кг, 2) додай пауз-присід 2 секунди внизу, 3) фронтальні присідання 2 тижні. Повернешся сильнішим.",
+        hl:'Як працює', ht:'3 кроки до результату',
+        s1t:'Заповни профіль', s1d:'Вік, вага, ціль, рівень, травми — AI одразу почне працювати персонально.',
+        s2t:'Тренуйся', s2d:"Обери программу або м'язи — додаток веде через кожен підхід з таймером відпочинку.",
+        s3t:'Отримуй інсайти', s3d:'AI аналізує прогрес, виявляє плато, пропонує зміни. Тижневий звіт автоматично.',
+        tl:'Стек', tt:'Побудовано на найкращому',
+        tc1:'Flutter', tc2:'Dart', tc3:'Grok 3 (xAI)', tc4:'Hive (локальна БД)',
+        tc5:'Push-сповіщення', tc6:'i18n (UA + EN)', tc7:'3 теми', tc8:'100% офлайн',
+        ctn:'<span class="accent">ПОЧНИ</span> СЬОГОДНІ',
+        ctd:'Безкоштовно. Без реєстрації. Без хмарі — всі дані на твоєму пристрої.',
+        ctb1:'<i class="fab fa-github"></i> Відкрити на GitHub',
+        ctb2:'<i class="fas fa-arrow-down"></i> Деталі',
+        fcon:'Контакт', fprv:'Privacy Policy',
+        fcopy:'CYBER GYM v1.0 · Розроблено з <span style="color:var(--accent)">♥</span> в Україні 🇺🇦',
+        frights:'© 2026 Maksym Darych · Всі права захищено · Powered by <a href="https://x.ai" target="_blank">Grok</a>'
+      },
+      en: {
+        nl1:'Features', nl2:'AI', nl3:'How it works', nl4:'Tech',
+        hb:'POWERED BY GROK AI',
+        hs:'Next-gen fitness tracker with an <strong>AI assistant</strong> that knows your body. Analyzes progress, detects plateaus, builds programs — personalized for you.',
+        hb1:'<i class="fas fa-bolt"></i> Learn more',
+        hb2:'<i class="fas fa-play"></i> How it works',
+        sl1:'Exercises', sl2:'Muscle groups', sl3:'AI tips', sl4:'Languages',
+        fl:'Features', ft:'Everything for your transformation',
+        fd:'Not just a workout log — an intelligent system that adapts to you.',
+        c1t:'AI Assistant',
+        c1d:'Personal AI trainer powered by Grok. Analyzes your data, detects plateaus, suggests exercise swaps for injuries.',
+        c2t:'Weekly Program',
+        c2d:'Choose days, muscle groups, exercises — get a ready weekly program. Save as templates.',
+        c2g:'PLANNING',
+        c3t:'Muscle Map',
+        c3d:'Interactive 3D body model. Tap a muscle — get exercises. Front & Back views.',
+        c3g:'INTERACTIVE',
+        c4t:'Gamification',
+        c4d:'XP, levels from Recruit to Cyborg, badges, streaks. Training becomes a game.',
+        c4g:'MOTIVATION',
+        c5t:'Progress Analytics',
+        c5d:'Weight & volume charts, 1RM calculator, activity heatmap, PR detection.',
+        c5g:'STATISTICS',
+        c6t:'Body Measurements',
+        c6d:'Interactive skeleton for measurements: chest, waist, biceps, thighs — 9 zones with history.',
+        c6g:'TRACKING',
+        c7t:'Exercise DB + Custom',
+        c7d:'100+ built-in exercises + create your own. Filter by muscle, equipment, type.',
+        c7g:'DATABASE',
+        c8t:'Trainer Mode',
+        c8d:'Manage clients: schedule, programs, history, AI analysis. Workout templates.',
+        c8g:'PRO',
+        c9t:'Backup & Sync',
+        c9d:'JSON export/import of all data. Notes, mood, measurements — everything saved.',
+        c9g:'SECURITY',
+        al:'AI Assistant', at:'AI Assistant that knows you',
+        ad:'Not a generic bot — AI that sees your workouts, weight, streaks, plateaus and injuries. Its advice is about you.',
+        ah:'AI ASSISTANT', aiph:'Ask something about training...',
+        aihi:"Hey! I'm your AI assistant. I see you have Chest + Triceps today. Last time bench press — 80kg × 8. Wanna try 82.5kg?",
+        aq1:'my right shoulder hurts during press', aq2:"what's a bench press alternative?",
+        aq3:'how long to rest between sets?', aq4:'how to break a squat plateau?',
+        ar1:'With shoulder pain — swap bench press for dumbbell press at 30° incline. This reduces front delt load. And add rotator cuff work: external rotation with band, 3×15 before pressing.',
+        ar2:'Best alternatives: incline dumbbell press (upper chest), dips (lower chest + triceps), or Hammer machine press. Choose based on how you feel.',
+        ar3:"For compound lifts (squat, press) — 2-3 minutes. For isolation (biceps, raises) — 60-90 seconds. Between large muscle groups — up to 3 min. You're on week 3 of your streak — don't cut rest short!",
+        ar4:"Squat — 85kg for 3 workouts in a row? That's a plateau. Try: 1) deload to 75kg and climb back with 2.5kg jumps, 2) add pause squats 2 seconds at bottom, 3) front squats for 2 weeks. You'll come back stronger.",
+        hl:'How it works', ht:'3 steps to results',
+        s1t:'Fill your profile', s1d:'Age, weight, goal, level, injuries — AI starts working for you right away.',
+        s2t:'Train', s2d:'Pick a program or muscles — the app guides you through each set with rest timers.',
+        s3t:'Get insights', s3d:'AI analyzes progress, detects plateaus, suggests changes. Weekly report automatically.',
+        tl:'Stack', tt:'Built on the best',
+        tc1:'Flutter', tc2:'Dart', tc3:'Grok 3 (xAI)', tc4:'Hive (local DB)',
+        tc5:'Push notifications', tc6:'i18n (UA + EN)', tc7:'3 themes', tc8:'100% offline',
+        ctn:'<span class="accent">START</span> TODAY',
+        ctd:'Free. No registration. No cloud — all data on your device.',
+        ctb1:'<i class="fab fa-github"></i> Open on GitHub',
+        ctb2:'<i class="fas fa-arrow-down"></i> Details',
+        fcon:'Contact', fprv:'Privacy Policy',
+        fcopy:'CYBER GYM v1.0 · Made with <span style="color:var(--accent)">♥</span> in Ukraine 🇺🇦',
+        frights:'© 2026 Maksym Darych · All rights reserved · Powered by <a href="https://x.ai" target="_blank">Grok</a>'
+      }
+    };
+
+    /* ═══ TRANSLATION ENGINE ═══ */
+    /* Елементи, які містять HTML (innerHTML) */
+    var htmlIds = ['hs','hb1','hb2','ctn','ctb1','ctb2','fcopy','frights'];
+    /* Елементи, які містять тільки текст (textContent) */
+    var txtIds = ['nl1','nl2','nl3','nl4','hb','sl1','sl2','sl3','sl4',
+      'fl','ft','fd','c1t','c1d','c2t','c2d','c2g','c3t','c3d','c3g',
+      'c4t','c4d','c4g','c5t','c5d','c5g','c6t','c6d','c6g','c7t','c7d','c7g',
+      'c8t','c8d','c8g','c9t','c9d','c9g','al','at','ad','ah',
+      's1t','s1d','s2t','s2d','s3t','s3d','tl','tt',
+      'tc1','tc2','tc3','tc4','tc5','tc6','tc7','tc8','ctd','fcon','fprv'];
+
+    var curLang = 'uk';
+    try { var saved = localStorage.getItem('cg-lang'); if (saved && L[saved]) curLang = saved; } catch(e) {}
+
+    function setLang(l) {
+      if (!L[l]) l = 'uk';
+      curLang = l;
+      try { localStorage.setItem('cg-lang', l); } catch(e) {}
+      document.documentElement.lang = l === 'uk' ? 'uk' : 'en';
+      var d = L[l];
+      txtIds.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && d[id] !== undefined) el.textContent = d[id];
+      });
+      htmlIds.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && d[id] !== undefined) el.innerHTML = d[id];
+      });
+      document.querySelectorAll('.lang-btn').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-lang') === l);
+      });
+      var inp = document.getElementById('chatInput');
+      if (inp && !inp.value) inp.placeholder = d['aiph'] || '';
+    }
+
+    document.querySelectorAll('.lang-btn').forEach(function(b) {
+      b.addEventListener('click', function() { setLang(b.getAttribute('data-lang')); });
+    });
+
+    setLang(curLang);
+
+    /* ═══ CHAT — ініціалізація після перекладу ═══ */
+    function getChat() { return L[curLang] || L['uk']; }
+
+    setTimeout(function() { addMsg('ai', getChat()['aihi']); }, 800);
+
+    function handleSend() {
+      var text = chatInput.value.trim();
+      if (!text) return;
+      addMsg('user', text);
+      chatInput.value = '';
+      setTimeout(function() {
+        showTyping();
+        setTimeout(function() {
+          removeTyping();
+          addMsg('ai', getChat()['ar' + ((curQ % 4) + 1)]);
+          curQ++;
+        }, 1200 + Math.random() * 800);
+      }, 400);
+    }
+
+    chatSend.addEventListener('click', handleSend);
+    chatInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleSend(); });
+    chatInput.addEventListener('focus', function() {
+      if (!chatInput.value) chatInput.placeholder = getChat()['aq' + ((curQ % 4) + 1)] || getChat()['aiph'];
+    });
+    setInterval(function() {
+      if (document.activeElement !== chatInput && !chatInput.value) {
+        chatInput.placeholder = getChat()['aq' + ((curQ % 4) + 1)] || getChat()['aiph'];
+      }
+    }, 4000);
+  </script>
+</body>
+</html>

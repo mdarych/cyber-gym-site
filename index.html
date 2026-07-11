@@ -50,22 +50,6 @@
       z-index: 9999;
     }
 
-    body::after {
-      content: '';
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent);
-      opacity: 0.4;
-      z-index: 10000;
-      animation: scanline 6s linear infinite;
-    }
-
-    @keyframes scanline {
-      0% { top: -2px; }
-      100% { top: 100vh; }
-    }
-
     .grid-bg {
       position: fixed;
       inset: 0;

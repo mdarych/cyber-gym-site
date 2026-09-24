@@ -25,7 +25,8 @@
   p, li{color:var(--text); font-size:15px; margin-bottom:10px;}
   ul{padding-left:22px; margin-bottom:12px;}
   li{margin-bottom:6px;}
-  a{color:var(--accent);}
+  a{color:var(--accent); overflow-wrap:anywhere;}
+  .lang-switch{display:flex; flex-wrap:wrap; gap:8px;}
   .note{background:var(--surface); border:1px solid var(--divider);
     border-radius:12px; padding:14px 16px; font-size:14px; color:var(--dim); margin:14px 0;}
   hr{border:none; border-top:1px solid var(--divider); margin:48px 0;}
@@ -37,90 +38,54 @@
 <div class="wrap">
 
   <!-- ═══════════════════ УКРАЇНСЬКА ═══════════════════ -->
-  <a id="uk"></a>
+  <section id="uk" lang="uk">
   <h1>CYBER GYM</h1>
   <div class="sub">ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ ТА УМОВИ ВИКОРИСТАННЯ</div>
-  <div class="date">Дата набуття чинності: 10 липня 2026 р.</div>
+  <div class="date">Дата набуття чинності: 24 вересня 2026 р.</div>
   <div class="lang-switch"><a href="#uk">🇺🇦 Українська</a><a href="#en">🇬🇧 English</a></div>
 
   <p>Ця політика описує, як застосунок CYBER GYM («Додаток») збирає, використовує
   та захищає інформацію користувачів, а також визначає умови використання Додатку.</p>
 
-  <h2>1. Дані, що зберігаються локально на вашому пристрої</h2>
-  <p>Основні дані Додатку зберігаються <strong>виключно локально</strong> і не передаються нам:</p>
-  <ul>
-    <li>Ім'я / позивний (необов'язково)</li>
-    <li>Вік, вага, зріст, цілі, травми — для персоналізації AI-порад</li>
-    <li>Дані тренувань (вправи, підходи, ваги, історія)</li>
-    <li>Заміри тіла, фото профілю</li>
-    <li>Ваш власний xAI API-ключ (якщо введено) — зберігається у захищеному
-        сховищі пристрою (Android Keystore) і не передається розробнику</li>
-  </ul>
-  <p>Ми не маємо доступу до цих даних і не зберігаємо їх на своїх серверах.</p>
+  <h2>1. Локальні дані та сфера дії</h2>
+<p>Ця політика стосується C-GYM / CYBER GYM для Android та iOS. Розробник: Maksym Darych, контакт: <a href="mailto:mdarych@gmail.com">mdarych@gmail.com</a>. Доступність функцій залежить від версії та платформи.</p>
+<p>Профіль, журнал тренувань, заміри, фото та дані клієнтів у режимі тренера зберігаються на пристрої. Профіль може містити ім’я або позивний, вік, стать, вагу, зріст, цілі та зазначені обмеження або травми. Для AI-функцій відповідна частина цих даних передається на обробку, як описано нижче. Локальне зберігання не означає відсутність мережевої обробки.</p>
+<p>Власний ключ xAI зберігається через захищене сховище: на Android — за допомогою Android Keystore, на iOS — Keychain. Під час прямих запитів ключ передається xAI для авторизації.</p>
 
-  <h2>2. AI-функції та передача даних xAI</h2>
-  <p>Коли ви використовуєте AI-функції (AI Сержант, генератор програм, аналіз
-  тренувань), текст вашого запиту та знеособлений контекст тренувань (вправи,
-  ваги, цілі, вказані травми) надсилаються до <strong>xAI API (Grok)</strong>
-  для генерації відповіді. Обробка цих даних xAI регулюється
-  <a href="https://x.ai/legal/privacy-policy">Політикою конфіденційності xAI</a>.</p>
-  <p>Якщо ви користуєтесь безкоштовним рівнем або підпискою AI PRO, запити
-  проходять через проксі-сервер розробника (інфраструктура Cloudflare), який
-  передає їх до xAI. Проксі не зберігає вміст ваших запитів. Якщо ви
-  використовуєте власний xAI-ключ, запити надсилаються до xAI напряму.</p>
+  <h2>2. AI-функції, xAI та Cloudflare</h2>
+<p>Для генерації відповідей застосунок надсилає до xAI (Grok) текст запиту, відповідну історію розмови та контекст: дані профілю, тренувань, прогресу, цілей і зазначених травм або обмежень. Якщо ім’я введено, воно може входити до контексту. Тому ці дані не слід вважати анонімними. У режимі тренера контекст може стосуватися обраного клієнта; перед використанням його даних переконайтеся, що маєте належний дозвіл.</p>
+<p>Без власного ключа xAI запити проходять через проксі розробника на Cloudflare Workers, який обробляє їх і пересилає до xAI. З власним ключем запити надсилаються до xAI напряму. Проксі передає вміст запитів і відповідей для виконання AI-функцій без окремого збереження їхнього тексту в базі даних або явного запису в журнал самим кодом проксі. Технічні журнали описано нижче; обробка й зберігання даних на стороні xAI регулюються умовами цього постачальника.</p>
+<p>Для обмеження зловживань проксі використовує IP-адресу. Для цього підключено сховище Cloudflare KV: ключ запису містить IP та дату, а значення — лічильник запитів. Запис має строк дії 90 000 секунд (25 годин) після останнього оновлення. У Cloudflare увімкнено збереження журналів викликів та технічних помилок. На поточному тарифі Cloudflare Workers Free документований строк зберігання Workers Logs становить 3 дні.</p>
+<p>Обробка постачальниками описана в <a href="https://x.ai/legal/privacy-policy">політиці xAI</a> та <a href="https://www.cloudflare.com/privacypolicy/">політиці Cloudflare</a>. Можна користуватися журналом без AI; не включайте до запитів дані, які не бажаєте передавати цим сервісам.</p>
 
-  <h2>3. Аналітика та звіти про збої</h2>
-  <p>Для покращення Додатку ми використовуємо сервіси Google Firebase:</p>
-  <ul>
-    <li><strong>Firebase Analytics</strong> — збирає анонімну статистику
-        використання: події в додатку (наприклад, завершене тренування,
-        використання AI, перегляд екранів), тип пристрою, версію додатку,
-        країну. Ці дані агреговані та не ідентифікують вас особисто.</li>
-    <li><strong>Firebase Crashlytics</strong> — автоматично збирає технічні
-        звіти про збої (модель пристрою, версія ОС, стан додатку в момент
-        помилки), щоб ми могли виправляти помилки.</li>
-  </ul>
-  <p>Обробка цих даних регулюється
-  <a href="https://policies.google.com/privacy">Політикою конфіденційності Google</a>.
-  Вміст ваших тренувань, особисті дані профілю та текст AI-чатів
-  <strong>не передаються</strong> в аналітику.</p>
+  <h2>3. Аналітика, скарги та звіти про збої</h2>
+<p>Firebase Analytics обробляє події використання, зокрема завершення тренування, загальну кількість тренувань, кількість вправ, ознаку нового рекорду, режим AI, перегляд пропозиції покупки та ідентифікатор придбаного продукту. SDK також може обробляти ідентифікатори екземпляра застосунку та пристрою, відомості про пристрій, ОС, версію застосунку й приблизне місцезнаходження, залежно від конфігурації. Ці дані не є гарантовано анонімними.</p>
+<p>У налаштуваннях Analytics дозволено збір географічних відомостей на рівні міста та докладних відомостей про пристрій у всіх регіонах. Це налаштування саме по собі не надає застосунку доступу до точних GPS-координат.</p>
+<p>Станом на 24 вересня 2026 року персоналізацію реклами дозволено в налаштуваннях ресурсу Analytics, але підключених акаунтів Google Ads немає. Експорт аудиторій через зв’язок цього ресурсу з Google Ads не налаштовано. Це опис конкретної інтеграції, а не твердження про відсутність усієї обробки даних сервісами Google.</p>
+<p>Коли ви надсилаєте скаргу на AI-відповідь, до Firebase Analytics передаються причина скарги та до 200 символів відповідного повідомлення. Фрагмент може містити персональні дані, якщо вони присутні у відповіді.</p>
+<p>Firebase Crashlytics отримує звіти про збої та деякі оброблені помилки, включно з текстом помилки, стеком викликів, технічною інформацією та ідентифікаторами інсталяції. Текст помилки може містити контекст операції. Постачальник: Google; див. <a href="https://policies.google.com/privacy">політику Google</a>.</p>
 
-  <h2>4. Покупки в додатку</h2>
-  <p>Додаток пропонує платні функції (підписка AI PRO, одноразова покупка
-  Trainer PRO). Усі платежі обробляє <strong>Google Play Billing</strong>.
-  Ми не отримуємо і не зберігаємо дані ваших платіжних карток — нам доступний
-  лише факт покупки для активації функцій. Керування підпискою та повернення
-  коштів здійснюються через Google Play згідно з
-  <a href="https://play.google.com/about/play-terms/">умовами Google Play</a>.</p>
+  <p>У Google Analytics налаштовано зберігання даних подій протягом 2 місяців, а даних користувачів — 14 місяців. Поновлення строку зберігання даних користувача за нової активності увімкнено, тому цей строк може подовжуватися. Ці налаштування не визначають строк зберігання більшості стандартних агрегованих звітів і не застосовуються до Crashlytics.</p>
 
-  <h2>5. Дозволи додатку</h2>
-  <ul>
-    <li><strong>Сповіщення</strong> — нагадування про тренування (за вашим вибором)</li>
-    <li><strong>Фотографії</strong> — для фото профілю (за вашим вибором)</li>
-    <li><strong>Інтернет</strong> — для AI-функцій, аналітики та покупок</li>
-  </ul>
+<h2>4. Покупки в застосунку</h2>
+<p>AI PRO — підписка, Trainer PRO — одноразова покупка. Доступні пропозиції та ціни відображаються в застосунку й системному вікні магазину. На Android покупки обробляє Google Play Billing; на iOS — Apple App Store через StoreKit. Застосунок отримує інформацію про продукт, статус покупки та дані підтвердження для надання доступу. Реквізити платіжних карток розробнику не передаються.</p>
+<p>Керування підпискою та запити на повернення коштів виконуються через відповідний магазин: <a href="https://play.google.com/about/play-terms/">Google Play</a> або <a href="https://www.apple.com/legal/internet-services/itunes/">Apple Media Services</a>. Використання власного ключа xAI може оплачуватися окремо згідно з умовами xAI.</p>
 
-  <h2>6. Безпека</h2>
-  <p>Дані тренувань і профілю зберігаються в локальному сховищі вашого пристрою
-  та захищені системними механізмами Android (пісочниця додатку). Ваш xAI
-  API-ключ додатково зберігається в захищеному сховищі (Android Keystore).
-  Резервні копії створюються лише вручну за вашою командою і зберігаються там,
-  куди ви їх експортуєте.</p>
+  <h2>5. Камера, фотографії та сповіщення</h2>
+<p>Камера та вибір фотографій використовуються за вашою дією для фото профілю або клієнта. Збереження чи поширення картки тренування виконується за вашою командою. Сповіщення використовуються для нагадувань про тренування. Доступами можна керувати в системних налаштуваннях. AI, аналітика та покупки потребують мережевого з’єднання.</p>
+
+  <h2>6. Зберігання, резервні копії та безпека</h2>
+<p>Локальні файли захищаються механізмами ізоляції застосунків Android або iOS. Власний ключ xAI зберігається окремо у захищеному сховищі. Для запитів до AI використовується HTTPS.</p>
+<p>Експорт у JSON створює копію даних тренувань і профілю; власний API-ключ виключено з поточного експорту. Експортований файл може містити персональні дані. Доступ та зберігання копій залежать від обраного вами місця чи сервісу. Системні резервні копії також залежать від налаштувань платформи.</p>
 
   <h2>7. Дані дітей</h2>
   <p>Додаток не призначений для осіб молодше 13 років. Ми свідомо не збираємо
   дані від дітей.</p>
 
-  <h2>8. Ваші права (GDPR / CCPA)</h2>
-  <ul>
-    <li><strong>Доступ:</strong> усі ваші дані видно безпосередньо в додатку.</li>
-    <li><strong>Видалення:</strong> Налаштування → Резервна копія → Видалити дані,
-        або повне видалення додатку з пристрою. Це стирає всі локальні дані.</li>
-    <li><strong>Аналітика:</strong> для запиту на видалення аналітичних даних,
-        пов'язаних із вашим екземпляром додатку, напишіть нам на пошту нижче.</li>
-    <li><strong>Відмова:</strong> ви можете не вводити особисті дані та не
-        використовувати AI-функції.</li>
-  </ul>
+  <h2>8. Доступ, видалення та звернення</h2>
+<p>Власні записи можна переглядати в застосунку та експортувати. Для видалення локальних файлів використовуйте повне видалення застосунку або очищення його даних засобами платформи. Це не видаляє експортовані файли, копії в інших сервісах, дані постачальників чи записи покупок. Дані захищеного сховища iOS можуть зберігатися після видалення застосунку; власний API-ключ можна відкликати в кабінеті xAI.</p>
+<p>Для звернень щодо доступу, виправлення чи видалення оброблюваних даних напишіть на <a href="mailto:mdarych@gmail.com">mdarych@gmail.com</a>. Можливість знайти конкретні записи та строки виконання залежать від типу даних, доступних ідентифікаторів, налаштувань постачальника та застосовних вимог. Не надсилайте API-ключі або платіжні реквізити. Права, передбачені застосовним законодавством, зберігаються.</p>
+<p>Можна не заповнювати необов’язкові поля та не використовувати AI. Відмова від AI сама по собі не вимикає Firebase Analytics або Crashlytics.</p>
 
   <h2>9. Інтелектуальна власність</h2>
   <p>Весь контент, дизайн, графіка та код Додатку є власністю розробника і
@@ -145,93 +110,58 @@
   <div class="contact">З питань конфіденційності:
   <a href="mailto:mdarych@gmail.com">mdarych@gmail.com</a></div>
 
+  </section>
   <hr>
 
   <!-- ═══════════════════ ENGLISH ═══════════════════ -->
-  <a id="en"></a>
+  <section id="en" lang="en">
   <h1>CYBER GYM</h1>
   <div class="sub">PRIVACY POLICY &amp; TERMS OF USE</div>
-  <div class="date">Effective date: July 10, 2026</div>
+  <div class="date">Effective date: September 24, 2026</div>
   <div class="lang-switch"><a href="#uk">🇺🇦 Українська</a><a href="#en">🇬🇧 English</a></div>
 
   <p>This policy describes how the CYBER GYM app (the “App”) collects, uses and
   protects user information, and sets out the terms of use of the App.</p>
 
-  <h2>1. Data stored locally on your device</h2>
-  <p>The App's core data is stored <strong>locally only</strong> and is never
-  transmitted to us:</p>
-  <ul>
-    <li>Name / callsign (optional)</li>
-    <li>Age, weight, height, goals, injuries — used to personalize AI advice</li>
-    <li>Workout data (exercises, sets, weights, history)</li>
-    <li>Body measurements, profile photo</li>
-    <li>Your own xAI API key (if entered) — stored in the device's secure
-        storage (Android Keystore) and never shared with the developer</li>
-  </ul>
-  <p>We have no access to this data and do not store it on our servers.</p>
+  <h2>1. Local data and scope</h2>
+<p>This policy covers C-GYM / CYBER GYM for Android and iOS. Developer: Maksym Darych; contact: <a href="mailto:mdarych@gmail.com">mdarych@gmail.com</a>. Feature availability depends on the version and platform.</p>
+<p>Profiles, workout journals, measurements, photos and trainer-mode client data are stored on the device. Profiles may include a name or callsign, age, sex, weight, height, goals and stated injuries or limitations. Relevant data is transmitted for AI processing as described below. Local storage does not mean that no online processing takes place.</p>
+<p>Your own xAI key is stored using secure storage backed by Android Keystore on Android or Keychain on iOS. It is sent to xAI to authorize direct requests.</p>
 
-  <h2>2. AI features and data shared with xAI</h2>
-  <p>When you use AI features (AI Sergeant, program generator, workout
-  analysis), your request text and anonymized workout context (exercises,
-  weights, goals, stated injuries) are sent to the <strong>xAI API (Grok)</strong>
-  to generate a response. xAI's processing is governed by the
-  <a href="https://x.ai/legal/privacy-policy">xAI Privacy Policy</a>.</p>
-  <p>If you use the free tier or the AI PRO subscription, requests pass through
-  the developer's proxy server (Cloudflare infrastructure), which forwards them
-  to xAI. The proxy does not store the content of your requests. If you use
-  your own xAI key, requests go directly to xAI.</p>
+  <h2>2. AI features, xAI and Cloudflare</h2>
+<p>To generate responses, the App sends request text, relevant conversation history and context to xAI (Grok). Context may include profile data, workouts, progress, goals and stated injuries or limitations. A name may be included when provided. This data should therefore not be considered anonymous. Trainer-mode context may relate to a selected client; ensure you have appropriate permission before using their data.</p>
+<p>Without your own xAI key, requests pass through the developer’s Cloudflare Workers proxy for processing and forwarding to xAI. With your own key, requests go directly to xAI. The proxy processes and forwards prompt and response content to provide AI features, without separately storing that text in a database or explicitly logging it in the proxy code. Technical logs are described below; processing and retention by xAI are governed by that provider’s terms.</p>
+<p>The proxy uses IP addresses for abuse prevention. Cloudflare KV is connected for this purpose: the record key contains the IP address and date, and its value is a request counter. The record expires 90,000 seconds (25 hours) after its last update. Invocation and technical error logs are enabled in Cloudflare. On the current Cloudflare Workers Free plan, the documented Workers Logs retention period is 3 days.</p>
+<p>Provider processing is described in the <a href="https://x.ai/legal/privacy-policy">xAI policy</a> and <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare policy</a>. You can use the journal without AI; do not include information you do not want to transmit to these services.</p>
 
-  <h2>3. Analytics and crash reporting</h2>
-  <p>To improve the App we use Google Firebase services:</p>
-  <ul>
-    <li><strong>Firebase Analytics</strong> — collects anonymous usage
-        statistics: in-app events (e.g. workout completed, AI used, screens
-        viewed), device type, app version, country. This data is aggregated
-        and does not personally identify you.</li>
-    <li><strong>Firebase Crashlytics</strong> — automatically collects
-        technical crash reports (device model, OS version, app state at the
-        moment of failure) so we can fix bugs.</li>
-  </ul>
-  <p>This processing is governed by the
-  <a href="https://policies.google.com/privacy">Google Privacy Policy</a>.
-  Your workout content, personal profile data and AI chat text are
-  <strong>not</strong> sent to analytics.</p>
+  <h2>3. Analytics, reports and crash diagnostics</h2>
+<p>Firebase Analytics processes usage events, including workout completion, total workout count, exercise count, whether a new record was achieved, AI mode, purchase-offer views and purchased product identifiers. Depending on configuration, the SDK may also process app-instance and device identifiers, device and OS details, app version and approximate location. This data is not guaranteed to be anonymous.</p>
+<p>Analytics settings allow city-level location and granular device information collection in all regions. This setting does not itself grant the App access to precise GPS coordinates.</p>
+<p>As of September 24, 2026, ads personalization is allowed in the Analytics property settings, but no Google Ads accounts are linked. Audience export through a link between this property and Google Ads is not configured. This describes that specific integration, rather than claiming that Google services perform no other data processing.</p>
+<p>Submitting a report about an AI response sends the report reason and up to 200 characters of that message to Firebase Analytics. The excerpt may contain personal information if present in the response.</p>
+<p>Firebase Crashlytics receives crash reports and certain handled errors, including error text, stack traces, technical details and installation identifiers. Error text may contain operation context. Provider: Google; see the <a href="https://policies.google.com/privacy">Google policy</a>.</p>
 
-  <h2>4. In-app purchases</h2>
-  <p>The App offers paid features (AI PRO subscription, one-time Trainer PRO
-  purchase). All payments are processed by <strong>Google Play Billing</strong>.
-  We never receive or store your payment card details — we only receive
-  confirmation of a purchase to activate features. Subscription management and
-  refunds are handled by Google Play under the
-  <a href="https://play.google.com/about/play-terms/">Google Play Terms</a>.</p>
+  <p>Google Analytics is configured to retain event data for 2 months and user data for 14 months. Resetting user-data retention on new activity is enabled, so this period may be extended. These settings do not determine retention for most standard aggregated reports and do not apply to Crashlytics.</p>
 
-  <h2>5. App permissions</h2>
-  <ul>
-    <li><strong>Notifications</strong> — workout reminders (opt-in)</li>
-    <li><strong>Photos</strong> — profile picture (opt-in)</li>
-    <li><strong>Internet</strong> — AI features, analytics and purchases</li>
-  </ul>
+<h2>4. In-app purchases</h2>
+<p>AI PRO is a subscription and Trainer PRO is a one-time purchase. Available offers and prices appear in the App and the store’s purchase sheet. Android purchases use Google Play Billing; iOS purchases use Apple App Store through StoreKit. The App receives product, purchase-status and verification information to provide access. The developer does not receive payment-card details.</p>
+<p>Manage subscriptions and request refunds through the relevant store: <a href="https://play.google.com/about/play-terms/">Google Play</a> or <a href="https://www.apple.com/legal/internet-services/itunes/">Apple Media Services</a>. Use of your own xAI key may incur separate charges under xAI’s terms.</p>
 
-  <h2>6. Security</h2>
-  <p>Workout and profile data is stored in the App's local storage protected
-  by Android's app sandbox. Your xAI API key is additionally stored in secure
-  storage (Android Keystore). Backups are created only manually at your
-  command and stored wherever you export them.</p>
+  <h2>5. Camera, photos and notifications</h2>
+<p>Camera and photo selection are used at your request for profile or client photos. Saving or sharing workout cards is initiated by you. Notifications provide workout reminders. You can manage permissions in system settings. AI, analytics and purchases require network access.</p>
+
+  <h2>6. Storage, backups and security</h2>
+<p>Local files are protected by Android or iOS app-isolation mechanisms. Your own xAI key is stored separately in secure storage. AI requests use HTTPS.</p>
+<p>JSON export creates a copy of workout and profile data; the current export excludes your own API key. Exported files may contain personal data. Access and retention depend on the destination or service you choose. System backups also depend on platform settings.</p>
 
   <h2>7. Children's data</h2>
   <p>The App is not intended for persons under 13. We do not knowingly collect
   data from children.</p>
 
-  <h2>8. Your rights (GDPR / CCPA)</h2>
-  <ul>
-    <li><strong>Access:</strong> all your data is visible directly in the App.</li>
-    <li><strong>Deletion:</strong> Settings → Backup → Delete data, or uninstall
-        the App. This erases all local data.</li>
-    <li><strong>Analytics:</strong> to request deletion of analytics data
-        associated with your app instance, contact us at the email below.</li>
-    <li><strong>Opt-out:</strong> you may choose not to enter personal data and
-        not to use AI features.</li>
-  </ul>
+  <h2>8. Access, deletion and inquiries</h2>
+<p>You can view your records in the App and export them. To remove local files, fully delete the App or clear its data using platform controls. This does not remove exported files, copies in other services, provider-held data or purchase records. iOS secure-storage entries may persist after uninstalling; you can revoke your own API key in your xAI account.</p>
+<p>For requests concerning access, correction or deletion of processed data, contact <a href="mailto:mdarych@gmail.com">mdarych@gmail.com</a>. The ability to locate records and fulfillment time depend on data type, available identifiers, provider settings and applicable requirements. Do not send API keys or payment details. Rights under applicable law remain unaffected.</p>
+<p>You can leave optional fields blank and choose not to use AI. Avoiding AI does not itself disable Firebase Analytics or Crashlytics.</p>
 
   <h2>9. Intellectual property</h2>
   <p>All content, design, graphics and code of the App are the property of the
@@ -256,6 +186,7 @@
   <div class="contact">Privacy inquiries:
   <a href="mailto:mdarych@gmail.com">mdarych@gmail.com</a></div>
 
+</section>
 </div>
 </body>
 </html>
